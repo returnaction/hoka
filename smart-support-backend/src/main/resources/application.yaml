@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: smart-support-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5000/assist?sslmode=disable
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+
+
+scibox:
+  base-url: https://llm.t1v.scibox.tech/v1/chat/completions
+  api-key: sk-IpfakHMmVVUrcAZwANxPMw
