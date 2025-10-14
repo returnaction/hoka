@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: pgvector-demo
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: assist
+    ports:
+      - "5000:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d  # 👈 сюда кладём init-скрипты
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+
+
+
+
+#  backend:
+#    build: .
+#    container_name: smart-support-backend
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - SCIBOX_API_KEY=${SCIBOX_API_KEY}
+#      - PINECONE_API_KEY=local-key
+#      - PINECONE_URL=http://pinecone-local:19334
+#    depends_on:
+#      - pinecone-local
