@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   db:
     image: ankane/pgvector:latest
@@ -7,29 +8,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: assist
+      POSTGRES_INITDB_ARGS: "--auth=scram-sha-256"
     ports:
       - "5000:5432"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-      - ./init:/docker-entrypoint-initdb.d  # 👈 сюда кладём init-скрипты
+      - ./postgres/data:/var/lib/postgresql/data                # сюда Postgres пишет данные
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro        # init-скрипты при ПЕРВОМ старте
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d assist"]
       interval: 5s
       timeout: 3s
       retries: 20
-
-
-
-
-
-#  backend:
-#    build: .
-#    container_name: smart-support-backend
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      - SCIBOX_API_KEY=${SCIBOX_API_KEY}
-#      - PINECONE_API_KEY=local-key
-#      - PINECONE_URL=http://pinecone-local:19334
-#    depends_on:
-#      - pinecone-local
