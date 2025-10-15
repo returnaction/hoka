@@ -206,4 +206,34 @@ public class SciboxClient {
         }
     }
 
+
+    //перефразировать вопрос, когда не смогли в категорию добавить
+    public String  changeQuestionToSimilarText(String text) {
+        String systemPrompt = "Переформулируй вопрос для дальнейшей классификации другими словами, чтобы суть осталась та же\n";
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.4,
+                "max_tokens", 256
+        );
+
+        try {
+            Map<String, Object> res = postJson("/chat/completions", body);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) res.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                return (String) message.get("content");
+            } else {
+                return "Ответ не получен или пуст.";
+            }
+        } catch (Exception e) {
+            return "Ошибка при обработке запроса: " + e.getMessage();
+        }
+    }
+
+
 }
