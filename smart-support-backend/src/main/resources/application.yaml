@@ -16,3 +16,4 @@ spring:
 scibox:
   base-url: https://llm.t1v.scibox.tech/v1/chat/completions
   api-key: sk-IpfakHMmVVUrcAZwANxPMw
+  embeddings-url: https://llm.t1v.scibox.tech/v1/embeddings
