@@ -1,1 +1,0 @@
-export type Settings = { topN: number; threshold: number }
