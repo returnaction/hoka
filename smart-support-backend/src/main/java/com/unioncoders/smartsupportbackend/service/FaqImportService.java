@@ -14,21 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class FaqImportService {
-
-    /*
-Прочитать Excel (по заголовкам, не по позициям столбцов).
-Нормализовать строки: trim(), схлопнуть двойные пробелы, при желании ё→е.
-Сформировать батч текстов для эмбеддинга (лучше по 64–128 штук):
-достаточно эмбеддить question (быстро и работает),
-продвинутый вариант: subcategory + " | " + question + " | " + answer.substring(0,200).
-Вызвать SciBox /v1/embeddings (bge-m3) на весь батч → получить vector(1024).
-Вставить строки в БД (batch insert).
-транзакция на батч (например, по 500–1000 строк),
-пропускать пустые/битые строки,
-(опц.) защита от дублей: уникальный ключ на (subcategory, question) и ON CONFLICT DO NOTHING.
-По окончании — создать/обновить ivfflat индекс и ANALYZE (если загружали «с нуля»).
 //TODO доавбить индексы спросить у Vlada на что будем добавлять
-     */
 
     private static final int BATCH_SIZE = 64;
 
@@ -71,7 +57,7 @@ public class FaqImportService {
                     insertedTotal += flushBatch(buffer);
                 }
             }
-            // хвост
+
             if (!buffer.isEmpty()) {
                 insertedTotal += flushBatch(buffer);
             }
@@ -84,17 +70,17 @@ public class FaqImportService {
 
     /// 1.3
     private int flushBatch(List<FaqRow> batch) {
-        // 1) эмбеддим пачкой
+        // 1 эмбеддим пачкой
         List<String> inputs = batch.stream().map(FaqRow::textForEmbedding).collect(Collectors.toList());
         List<List<Double>> vectors = sciboxClient.getEmbeddings(inputs);
 
-        // 2) соберём строки для вставки
+        // 2 соберём строки для вставки
         List<FaqRowReady> ready = new ArrayList<>(batch.size());
         for (int i = 0; i < batch.size(); i++) {
             ready.add(batch.get(i).withEmbeddingLiteral(toVectorLiteral(vectors.get(i))));
         }
 
-        // 3) пишем в БД пачкой
+        // 3 пишем в БД пачкой
         int inserted = faqEmbeddingsRepository.batchInsert(ready);
 
         batch.clear();
@@ -112,7 +98,6 @@ public class FaqImportService {
     }
 
     private static String toVectorLiteral(List<Double> v) {
-        // pgvector принимает текстовый литерал: '[0.123, -0.456, ...]'
         StringJoiner j = new StringJoiner(",", "[", "]");
         for (Double d : v) j.add(String.format(Locale.US, "%.10f", d));
         return j.toString();
@@ -125,7 +110,7 @@ public class FaqImportService {
         return s != null ? s.trim() : null;
     }
 
-    //  DTO для вставки
+    //  dto для вставки
     public record FaqRow(
             String category, String subcategory, String question,
             String priority, String audience, String answer,

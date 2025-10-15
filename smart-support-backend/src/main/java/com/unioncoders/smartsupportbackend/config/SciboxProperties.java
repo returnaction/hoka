@@ -13,5 +13,5 @@ public class SciboxProperties {
     private String apiKey;
 
     private String embedModel = "bge-m3";
-    private String chatModel  = "Qwen2.5-72B-Instruct-AWQ";
+    private String chatModel = "Qwen2.5-72B-Instruct-AWQ";
 }

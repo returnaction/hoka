@@ -71,8 +71,7 @@
 			<scope>test</scope>
 		</dependency>
 
-
-<!--		Извлен из exel файла строки-->
+<!--		из excel-->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
