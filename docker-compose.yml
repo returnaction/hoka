@@ -28,14 +28,11 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.simple
     container_name: scibox-frontend
     ports:
       - "3000:80"
-    environment:
-      - NODE_ENV=production
     depends_on:
-      - db
       - backend
 
   db:

@@ -2,9 +2,14 @@ import React from 'react'
 import { useAppDispatch, useAppSelector } from '@/shared/hooks'
 import {
   Paper, Typography, Stack, Button, Box, Divider, Skeleton,
-  Drawer, List, ListItemButton, ListItemText, Chip, LinearProgress, Alert
+  Drawer, List, ListItemButton, ListItemText, Chip, LinearProgress, Alert, Fade, Zoom, IconButton, Tooltip, Card, CardContent
 } from '@mui/material'
 import CategoryIcon from '@mui/icons-material/Category'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import InsertCommentIcon from '@mui/icons-material/InsertComment'
+import ListAltIcon from '@mui/icons-material/ListAlt'
+import CloseIcon from '@mui/icons-material/Close'
+import ThumbUpIcon from '@mui/icons-material/ThumbUp'
 import { editorActions } from '@/entities/editor/editor.slice'
 
 export const SuggestionsPanel: React.FC = () => {
@@ -14,17 +19,49 @@ export const SuggestionsPanel: React.FC = () => {
   const [open, setOpen] = React.useState(false)
 
   const renderPlaceholder = () => (
-    <Stack spacing={2} alignItems="center" sx={{ opacity: 0.6, py: 3 }}>
-      <Box sx={{ width: '100%', height: 80 }}>
-        <Skeleton variant="rounded" height={80} />
-      </Box>
-      <Typography variant="body2">
-        Выберите шаблон из базы знаний или дождитесь подсказок.
-      </Typography>
-      <Button variant="outlined" size="small" onClick={() => setOpen(true)}>
-        Открыть шаблоны
-      </Button>
-    </Stack>
+    <Fade in>
+      <Stack spacing={2.5} alignItems="center" sx={{ py: 4 }}>
+        <Box 
+          sx={{ 
+            width: '100%', 
+            height: 120,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, rgba(155,123,255,0.08) 0%, rgba(91,140,255,0.08) 100%)',
+            borderRadius: 3,
+            border: '2px dashed rgba(155,123,255,0.3)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              borderColor: 'rgba(155,123,255,0.5)',
+              background: 'linear-gradient(135deg, rgba(155,123,255,0.12) 0%, rgba(91,140,255,0.12) 100%)'
+            }
+          }}
+        >
+          <AutoAwesomeIcon sx={{ fontSize: 48, color: 'secondary.main', opacity: 0.5 }} />
+        </Box>
+        <Typography variant="body2" sx={{ textAlign: 'center', opacity: 0.75 }}>
+          Отправьте сообщение от клиента, чтобы получить подсказки из базы знаний
+        </Typography>
+        <Tooltip title="Открыть все шаблоны">
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={() => setOpen(true)}
+            startIcon={<ListAltIcon />}
+            sx={{
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(91,140,255,0.3)'
+              }
+            }}
+          >
+            Открыть шаблоны
+          </Button>
+        </Tooltip>
+      </Stack>
+    </Fade>
   )
 
   const extractScore = (summary?: string): number => {
@@ -36,169 +73,349 @@ export const SuggestionsPanel: React.FC = () => {
   return (
     <Paper
       sx={{
-        p: 6,
-        pt: '6em',
+        p: 3,
         maxHeight: 'calc(100vh - 200px)',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.5)'
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'rgba(155,123,255,0.3)'
+        }
       }}
     >
-      <Typography variant="h6" sx={{ pt: 5.5, mb: 1.5, fontWeight: 700, zIndex: 5 }}>
-        Шаблон ответа
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <AutoAwesomeIcon sx={{ color: 'secondary.main' }} />
+        <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }}>
+          Шаблон ответа
+        </Typography>
+        {items.length > 0 && (
+          <Chip 
+            label={`${items.length} вариантов`} 
+            size="small" 
+            color="secondary" 
+            variant="outlined"
+            sx={{ fontWeight: 600 }}
+          />
+        )}
+      </Stack>
 
       {status === 'idle' && renderPlaceholder()}
 
       {status === 'loading' && (
-        <Stack spacing={1.5}>
-          <Skeleton variant="rounded" height={84} />
-          <Skeleton variant="rounded" height={160} />
-          <Skeleton variant="rounded" height={40} />
-        </Stack>
+        <Fade in>
+          <Stack spacing={2}>
+            <Skeleton variant="rounded" height={100} sx={{ borderRadius: 3 }} animation="wave" />
+            <Skeleton variant="rounded" height={180} sx={{ borderRadius: 3 }} animation="wave" />
+            <Skeleton variant="rounded" height={50} sx={{ borderRadius: 3 }} animation="wave" />
+          </Stack>
+        </Fade>
       )}
 
       {status === 'empty' && (
-        <Alert severity="info">Подходящих шаблонов не найдено.</Alert>
+        <Fade in>
+          <Alert 
+            severity="info"
+            sx={{ 
+              borderRadius: 2.5,
+              '& .MuiAlert-message': { width: '100%' }
+            }}
+          >
+            Подходящих шаблонов не найдено. Попробуйте другой запрос.
+          </Alert>
+        </Fade>
       )}
+
       {status === 'error' && (
-        <Alert severity="error">Ошибка загрузки шаблонов.</Alert>
+        <Fade in>
+          <Alert 
+            severity="error"
+            sx={{ borderRadius: 2.5 }}
+          >
+            Ошибка загрузки шаблонов. Проверьте соединение с сервером.
+          </Alert>
+        </Fade>
       )}
 
-      {status === 'ready' && (
-        <Stack spacing={2}>
-          {/* Категория от классификатора */}
-          {category && (
-            <Alert icon={<CategoryIcon />} severity="success" sx={{ mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Категория: {category}
-                {subcategory && ` / ${subcategory}`}
-              </Typography>
-            </Alert>
-          )}
+      {status === 'ready' && top && (
+        <Fade in>
+          <Stack spacing={2.5}>
+            {/* Категория от классификатора */}
+            {category && (
+              <Zoom in style={{ transitionDelay: '100ms' }}>
+                <Alert 
+                  icon={<CategoryIcon />} 
+                  severity="success" 
+                  sx={{ 
+                    borderRadius: 2.5,
+                    background: 'linear-gradient(135deg, rgba(60,203,127,0.15) 0%, rgba(60,203,127,0.08) 100%)',
+                    border: '1px solid rgba(60,203,127,0.25)',
+                    transition: 'transform 0.2s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)'
+                    }
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Категория: {category}
+                    {subcategory && ` / ${subcategory}`}
+                  </Typography>
+                </Alert>
+              </Zoom>
+            )}
 
-          {top && (
-            <>
-              <Box
+            <Zoom in style={{ transitionDelay: '200ms' }}>
+              <Card
                 sx={{
-                  p: 1.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  background: 'rgba(255,255,255,0.02)'
+                  background: 'linear-gradient(135deg, rgba(155,123,255,0.15) 0%, rgba(155,123,255,0.08) 100%)',
+                  border: '2px solid rgba(155,123,255,0.3)',
+                  borderRadius: 3,
+                  position: 'relative',
+                  overflow: 'visible',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 20px 48px rgba(155,123,255,0.35)',
+                    border: '2px solid rgba(155,123,255,0.5)'
+                  }
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                  <Typography variant="subtitle2" sx={{ flex: 1, opacity: 0.9 }}>
-                    Источник: {top.code} · "{top.title}"
-                  </Typography>
-                  {top.recommendation && (
-                    <Chip label={top.recommendation} size="small" color="success" />
-                  )}
-                </Stack>
-
-                {top.summary && (
-                  <Box sx={{ mb: 1 }}>
-                    <Typography variant="body2" sx={{ mb: 0.5, opacity: 0.9 }}>
-                      <b>{top.summary}</b>
-                    </Typography>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={extractScore(top.summary)} 
-                      sx={{ height: 6, borderRadius: 1 }}
-                      color={extractScore(top.summary) > 70 ? 'success' : 'warning'}
+                {top.recommendation && (
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    top: -12, 
+                    right: 16,
+                    animation: 'pulse 2s ease-in-out infinite',
+                    '@keyframes pulse': {
+                      '0%, 100%': { transform: 'scale(1)' },
+                      '50%': { transform: 'scale(1.05)' }
+                    }
+                  }}>
+                    <Chip 
+                      icon={<ThumbUpIcon sx={{ fontSize: 16 }} />}
+                      label="Лучшее совпадение" 
+                      color="secondary"
+                      size="small"
+                      sx={{ 
+                        fontWeight: 700,
+                        boxShadow: '0 4px 16px rgba(155,123,255,0.4)',
+                        background: 'linear-gradient(135deg, #9B7BFF 0%, #7B5FE0 100%)'
+                      }}
                     />
                   </Box>
                 )}
-              </Box>
 
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 0.5, opacity: 0.9 }}>
-                  Текст шаблона:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.55 }}
-                >
-                  {top.body}
-                </Typography>
-              </Box>
+                <CardContent sx={{ pt: top.recommendation ? 3 : 2 }}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                    <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, color: 'secondary.light' }}>
+                      {top.code} · "{top.title}"
+                    </Typography>
+                  </Stack>
 
-              <Divider />
+                  {top.summary && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                        {top.summary}
+                      </Typography>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={extractScore(top.summary)} 
+                        sx={{ 
+                          height: 8, 
+                          borderRadius: 4,
+                          background: 'rgba(0,0,0,0.3)',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            background: extractScore(top.summary) > 70
+                              ? 'linear-gradient(90deg, #3CCB7F 0%, #34B36E 100%)'
+                              : 'linear-gradient(90deg, #FFA726 0%, #FB8C00 100%)',
+                            boxShadow: extractScore(top.summary) > 70
+                              ? '0 0 12px rgba(60,203,127,0.6)'
+                              : '0 0 12px rgba(255,167,38,0.6)'
+                          }
+                        }}
+                      />
+                    </Box>
+                  )}
 
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="contained"
-                  onClick={() => dispatch(editorActions.setOrigin(top))}
-                >
-                  Вставить в ответ
-                </Button>
-                <Button variant="outlined" onClick={() => setOpen(true)}>
-                  Все шаблоны ({items.length})
-                </Button>
-              </Stack>
-            </>
-          )}
-        </Stack>
+                  <Divider sx={{ my: 2, opacity: 0.3 }} />
+
+                  <Typography variant="caption" sx={{ display: 'block', mb: 1, opacity: 0.75, fontWeight: 600 }}>
+                    Текст шаблона:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ 
+                      whiteSpace: 'pre-wrap', 
+                      lineHeight: 1.6,
+                      color: 'rgba(255,255,255,0.9)',
+                      p: 1.5,
+                      background: 'rgba(0,0,0,0.2)',
+                      borderRadius: 2,
+                      border: '1px solid rgba(255,255,255,0.08)'
+                    }}
+                  >
+                    {top.body}
+                  </Typography>
+                </CardContent>
+
+                <Box sx={{ p: 2, pt: 0 }}>
+                  <Stack direction="row" spacing={1.5}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="secondary"
+                      startIcon={<InsertCommentIcon />}
+                      onClick={() => dispatch(editorActions.setOrigin(top))}
+                      sx={{
+                        fontWeight: 700,
+                        py: 1.2,
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.03)',
+                          boxShadow: '0 12px 32px rgba(155,123,255,0.5)'
+                        }
+                      }}
+                    >
+                      Вставить в ответ
+                    </Button>
+                    {items.length > 1 && (
+                      <Tooltip title="Посмотреть все варианты">
+                        <Button 
+                          variant="outlined"
+                          onClick={() => setOpen(true)}
+                          startIcon={<ListAltIcon />}
+                          sx={{
+                            minWidth: 180,
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              transform: 'translateY(-2px)'
+                            }
+                          }}
+                        >
+                          Все ({items.length})
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </Stack>
+                </Box>
+              </Card>
+            </Zoom>
+          </Stack>
+        </Fade>
       )}
 
       <Drawer
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        PaperProps={{ sx: { width: 420, p: 2 } }}
+        PaperProps={{ 
+          sx: { 
+            width: 480, 
+            p: 3,
+            background: 'linear-gradient(180deg, rgba(20,20,35,0.98) 0%, rgba(15,15,25,0.98) 100%)',
+            backdropFilter: 'blur(12px)'
+          } 
+        }}
       >
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Все найденные шаблоны ({items.length})
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Все найденные шаблоны ({items.length})
+          </Typography>
+          <IconButton 
+            onClick={() => setOpen(false)}
+            sx={{
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'rotate(90deg)',
+                color: 'error.main'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Stack>
+
         {category && (
-          <Alert icon={<CategoryIcon />} severity="info" sx={{ mb: 2 }}>
+          <Alert 
+            icon={<CategoryIcon />} 
+            severity="info" 
+            sx={{ mb: 2, borderRadius: 2 }}
+          >
             <Typography variant="body2">
               {category} {subcategory && `/ ${subcategory}`}
             </Typography>
           </Alert>
         )}
-        <List>
+
+        <List sx={{ maxHeight: 'calc(100vh - 180px)', overflow: 'auto' }}>
           {items.map((t, i) => (
-            <ListItemButton
-              key={i}
-              onClick={() => {
-                dispatch(editorActions.setOrigin(t))
-                setOpen(false)
-              }}
-              sx={{ 
-                mb: 1, 
-                border: '1px solid', 
-                borderColor: 'divider', 
-                borderRadius: 1,
-                flexDirection: 'column',
-                alignItems: 'flex-start'
-              }}
-            >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%', mb: 0.5 }}>
-                <ListItemText
-                  primary={`${t.code} · ${t.title}`}
-                  secondary={t.source}
-                  primaryTypographyProps={{ sx: { fontWeight: 600, fontSize: '0.9rem' } }}
-                  secondaryTypographyProps={{ sx: { fontSize: '0.75rem' } }}
-                  sx={{ flex: 1 }}
-                />
-                {t.recommendation && (
-                  <Chip label="TOP" size="small" color="success" />
-                )}
-              </Stack>
-              {t.summary && (
-                <Box sx={{ width: '100%' }}>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    {t.summary}
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={extractScore(t.summary)} 
-                    sx={{ height: 4, borderRadius: 1, mt: 0.5 }}
-                    color={extractScore(t.summary) > 70 ? 'success' : 'warning'}
+            <Fade in key={i} style={{ transitionDelay: `${i * 50}ms` }}>
+              <ListItemButton
+                onClick={() => {
+                  dispatch(editorActions.setOrigin(t))
+                  setOpen(false)
+                }}
+                sx={{ 
+                  mb: 1.5, 
+                  border: '1px solid',
+                  borderColor: i === 0 ? 'rgba(155,123,255,0.4)' : 'rgba(255,255,255,0.1)',
+                  borderRadius: 2.5,
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  p: 2,
+                  background: i === 0 
+                    ? 'linear-gradient(135deg, rgba(155,123,255,0.12) 0%, rgba(155,123,255,0.06) 100%)'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateX(-4px)',
+                    boxShadow: i === 0
+                      ? '0 12px 32px rgba(155,123,255,0.3)'
+                      : '0 12px 32px rgba(0,0,0,0.4)',
+                    borderColor: i === 0 ? 'rgba(155,123,255,0.6)' : 'rgba(255,255,255,0.2)'
+                  }
+                }}
+              >
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%', mb: 1 }}>
+                  <ListItemText
+                    primary={`${t.code} · ${t.title}`}
+                    secondary={t.source}
+                    primaryTypographyProps={{ sx: { fontWeight: 700, fontSize: '0.95rem' } }}
+                    secondaryTypographyProps={{ sx: { fontSize: '0.75rem', opacity: 0.7 } }}
+                    sx={{ flex: 1 }}
                   />
-                </Box>
-              )}
-            </ListItemButton>
+                  {t.recommendation && (
+                    <Chip 
+                      label="TOP" 
+                      size="small" 
+                      color="secondary"
+                      sx={{ fontWeight: 700 }}
+                    />
+                  )}
+                </Stack>
+                {t.summary && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mb: 0.5 }}>
+                      {t.summary}
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={extractScore(t.summary)} 
+                      sx={{ 
+                        height: 5, 
+                        borderRadius: 2.5,
+                        background: 'rgba(0,0,0,0.25)'
+                      }}
+                      color={extractScore(t.summary) > 70 ? 'success' : 'warning'}
+                    />
+                  </Box>
+                )}
+              </ListItemButton>
+            </Fade>
           ))}
         </List>
       </Drawer>
