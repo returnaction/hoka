@@ -17,12 +17,12 @@ export const App: React.FC = () => {
       <Box
         sx={{
           minHeight: '100vh',
-          pt: 2,
+          pt: 4,
           pb: 6
         }}
       >
         <Container maxWidth="xl">
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, position: 'sticky', top: 64, zIndex: 1, bgcolor: 'background.default', pt: 1 }}>
             <Tab label="Operator Desk" />
             <Tab label="API Test" />
             <Tab label="Settings" />

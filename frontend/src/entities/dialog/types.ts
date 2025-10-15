@@ -1,1 +1,1 @@
-export type Message = { author: 'client'|'operator'; text: string }
+export type Message = { author: 'client' | 'operator' | 'assistant'; text: string }

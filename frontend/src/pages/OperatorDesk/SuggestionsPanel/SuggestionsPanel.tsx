@@ -27,8 +27,17 @@ export const SuggestionsPanel: React.FC = () => {
   )
 
   return (
-    <Paper sx={{ p: 2, position: 'sticky', top: 16 }}>
-      <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 700 }}>
+<Paper
+  sx={{
+    p: 6,
+    pt: '6em',
+    maxHeight: 'calc(100vh - 200px)',
+    overflowY: 'auto'
+  }}
+>
+
+
+      <Typography variant="h6" sx={{ pt: 5.5, mb: 1.5, fontWeight: 700, zIndex: 5 }}>
         Шаблон ответа
       </Typography>
 

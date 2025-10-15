@@ -10,15 +10,22 @@ export const ApiTestPage: React.FC = () => {
     response?: string
   }[]>([])
 
-  const testEndpoint = async (name: string, path: string) => {
+  const testEndpoint = async (name: string, path: string, method: 'GET' | 'POST' = 'GET', body?: any) => {
     const url = config.apiBaseUrl + path
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config.apiKey ? { 'Authorization': `Bearer ${config.apiKey}` } : {})
+        },
+        ...(body ? { body: JSON.stringify(body) } : {})
+      })
       const text = await response.text()
       setTestResults(prev => [...prev, {
         endpoint: name,
         status: response.ok ? 'Success' : `Error ${response.status}`,
-        response: text.substring(0, 200)
+        response: text.substring(0, 300)
       }])
     } catch (error) {
       setTestResults(prev => [...prev, {
@@ -31,10 +38,13 @@ export const ApiTestPage: React.FC = () => {
 
   const runTests = () => {
     setTestResults([])
-    testEndpoint('Health', config.healthPath)
-    testEndpoint('Models', config.modelsPath)
-    testEndpoint('Classify', config.classifyPath)
-    testEndpoint('KB Search', config.kbSearchPath)
+    // GET requests
+    testEndpoint('Health', config.healthPath, 'GET')
+    testEndpoint('Models', config.modelsPath, 'GET')
+    
+    // POST requests with body
+    testEndpoint('Classify', config.classifyPath, 'POST', { text: 'Не могу войти в систему' })
+    testEndpoint('KB Search', config.kbSearchPath, 'POST', { text: 'Забыл пароль' })
   }
 
   return (
@@ -44,6 +54,7 @@ export const ApiTestPage: React.FC = () => {
         
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">Base URL: {config.apiBaseUrl}</Typography>
+          <Typography variant="body2">API Key: {config.apiKey ? '***' + config.apiKey.slice(-4) : 'Not set'}</Typography>
         </Alert>
 
         <Button variant="contained" onClick={runTests} sx={{ mb: 3 }}>
@@ -57,7 +68,7 @@ export const ApiTestPage: React.FC = () => {
                 {result.endpoint}: {result.status}
               </Typography>
               {result.response && (
-                <Typography variant="body2" sx={{ mt: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                <Typography variant="body2" sx={{ mt: 1, fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
                   {result.response}
                 </Typography>
               )}
