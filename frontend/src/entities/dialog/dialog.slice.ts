@@ -1,7 +1,9 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { Message } from './types'
 
-type State = { messages: Message[] }
+type State = { 
+  messages: Message[]
+}
 
 const initialState: State = {
   messages: [{ author: 'client', text: 'Забыл пароль, не приходит письмо для сброса.' }]
@@ -16,6 +18,9 @@ const slice = createSlice({
     },
     sendOperator: (state, action: PayloadAction<string>) => {
       state.messages.push({ author: 'operator', text: action.payload })
+    },
+    clearMessages: (state) => {
+      state.messages = []
     }
   }
 })

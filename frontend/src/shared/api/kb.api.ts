@@ -1,14 +1,32 @@
 import { baseApi } from './baseApi'
-import type { Template } from '@/entities/suggestions/types'
 
-type SearchResp = { items: Template[] }
+export type KbCandidate = {
+  id: number
+  category: string
+  subcategory: string
+  question: string
+  answer: string
+  score: number
+}
+
+export type KbSearchResponse = {
+  category: string
+  subcategory: string
+  candidates: KbCandidate[]
+}
 
 export const kbApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    search: build.query<SearchResp, { query: string; topN: number }>({
-      query: (p) => ({ url: '/kb/search', method: 'POST', body: p })
+    // Семантический поиск - возвращает категорию + кандидаты
+    semanticSearch: build.mutation<KbSearchResponse, { text: string; topK?: number }>({
+      query: (params) => ({
+        url: '/v1/classify/semantic',
+        method: 'POST',
+        body: { text: params.text },
+        params: { topK: params.topK || 3 }
+      })
     })
   })
 })
 
-export const { useSearchQuery } = kbApi
+export const { useSemanticSearchMutation } = kbApi
