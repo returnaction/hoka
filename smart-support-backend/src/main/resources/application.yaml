@@ -1,19 +1,29 @@
-server:
-  port: 8080
-
 spring:
+  config:
+    import: >
+      optional:file:./.env.local.properties,
+      optional:file:../.env.local.properties,
+      optional:file:./smart-support-backend/.env.local.properties
+
   application:
     name: smart-support-backend
-
   datasource:
-    url: jdbc:postgresql://localhost:5000/assist?sslmode=disable
-    username: postgres
-    password: postgres
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-
-
 scibox:
-  api-key: sk-IpfakHMmVVUrcAZwANxPMw
-  chat-url: https://llm.t1v.scibox.tech/v1/chat/completions
-  embed-url: https://llm.t1v.scibox.tech/v1/embeddings
+  base-url: ${SCIBOX_BASE_URL}
+  api-key: ${SCIBOX_TOKEN}
+  embed-model: ${SCIBOX_EMBED_MODEL:bge-m3}
+  chat-model: ${SCIBOX_CHAT_MODEL:Qwen2.5-72B-Instruct-AWQ}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+
+server:
+  port: ${SERVER_PORT:8080}

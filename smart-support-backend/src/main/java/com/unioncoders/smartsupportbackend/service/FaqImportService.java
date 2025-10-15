@@ -1,6 +1,7 @@
 package com.unioncoders.smartsupportbackend.service;
 
 import com.unioncoders.smartsupportbackend.repository.FaqEmbeddingsRepository;
+import com.unioncoders.smartsupportbackend.service.client.SciboxClient;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class FaqImportService {
 пропускать пустые/битые строки,
 (опц.) защита от дублей: уникальный ключ на (subcategory, question) и ON CONFLICT DO NOTHING.
 По окончании — создать/обновить ivfflat индекс и ANALYZE (если загружали «с нуля»).
+//TODO доавбить индексы спросить у Vlada на что будем добавлять
      */
 
     private static final int BATCH_SIZE = 64;

@@ -1,10 +1,12 @@
-package com.unioncoders.smartsupportbackend.service;
+package com.unioncoders.smartsupportbackend.util;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
+
+/// уже наверно не нужен
 @Service
 public class TaxonomyProvider {
 
