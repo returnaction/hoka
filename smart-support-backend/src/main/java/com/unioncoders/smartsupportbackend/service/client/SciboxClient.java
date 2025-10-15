@@ -44,12 +44,13 @@ public class SciboxClient {
 
     // 2.B Подсказка категории/подкатегории от LLM
     public SciboxResponse classifyText(String text) {
+        String normalisedText = normaliseText(text);
         String systemPrompt = buildSystemPrompt(taxonomyProvider.getCategories());
         Map<String, Object> body = Map.of(
                 "model", props.getChatModel(),
                 "messages", List.of(
                         Map.of("role", "system", "content", systemPrompt),
-                        Map.of("role", "user",   "content", text)
+                        Map.of("role", "user",   "content", normalisedText)
                 ),
                 "temperature", 0.3,
                 "max_tokens", 256
@@ -130,6 +131,43 @@ public class SciboxClient {
         sb.append("\nОтвет верни строго в JSON виде: ")
                 .append("{\"category\":\"<категория>\",\"subcategory\":\"<подкатегория>\"}");
         return sb.toString();
+    }
+
+
+    //нормализация вопроса(убрать мат, жаргон)
+    public String normaliseText(String text) {
+        String systemPrompt = String.join("\n",
+                "Ты — аналитик клиентских обращений в банке.",
+                "Твоя задача — переформулировать вопрос клиента, если он:",
+                "— содержит эмоциональные выражения, жалобы или агрессию;",
+                "— использует жаргон или разговорные фразы;",
+                "Если вопрос уже нейтральный и понятный — верни его без изменений.",
+                "Если требуется переформулировка — перепиши его строго в виде запроса, без обращения к клиенту, без извинений, без вопросов от лица поддержки.",
+                "Просто верни переформулированный текст."
+        );
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.3,
+                "max_tokens", 256
+        );
+
+        try {
+            Map<String, Object> res = postJson("/chat/completions", body);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) res.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                return (String) message.get("content");
+            } else {
+                return "Ответ не получен или пуст.";
+            }
+        } catch (Exception e) {
+            return "Ошибка при обработке запроса: " + e.getMessage();
+        }
     }
 
 }
