@@ -1,0 +1,1 @@
+export const analyticsMw = (api:any)=>(next:any)=>(action:any)=>next(action)

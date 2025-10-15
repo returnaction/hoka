@@ -1,0 +1,1 @@
+export type Message = { author: 'client'|'operator'; text: string }
