@@ -1,72 +1,53 @@
 package com.unioncoders.smartsupportbackend.controller;
 
-import com.unioncoders.smartsupportbackend.model.*;
-import com.unioncoders.smartsupportbackend.repository.EmbeddingRepository;
-import com.unioncoders.smartsupportbackend.service.SciboxClient;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.unioncoders.smartsupportbackend.model.SciboxResponse;
+import com.unioncoders.smartsupportbackend.model.SupportRequest;
+import com.unioncoders.smartsupportbackend.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/analyze")
+@RequestMapping("/api/v1")
 public class SupportController {
 
     private final SciboxClient sciboxClient;
-    private final EmbeddingRepository embeddingRepository;
+    private final FaqImportService importService;
+    private final SemanticSearchService searchService;
 
-    public SupportController(SciboxClient sciboxClient, EmbeddingRepository embeddingRepository) {
+    public SupportController(SciboxClient sciboxClient,
+                             FaqImportService importService,
+                             SemanticSearchService searchService) {
         this.sciboxClient = sciboxClient;
-        this.embeddingRepository = embeddingRepository;
+        this.importService = importService;
+        this.searchService = searchService;
     }
 
-    @PostMapping
+    /// 1.1 импорт Excel
+    @PostMapping(value = "/faq/import", consumes = "multipart/form-data")
+    public ResponseEntity<Map<String, Object>> importFaq(@RequestParam("file") MultipartFile file) {
+        int inserted = importService.importFromExcel(file);
+        return ResponseEntity.ok(Map.of("status", "ok", "inserted", inserted));
+    }
+
+    /// классифицирует текст обращения.
+    @PostMapping("/classify")
     public ResponseEntity<SciboxResponse> classify(@RequestBody SupportRequest request) {
-        SciboxResponse response = sciboxClient.classifyText(request.getText());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(sciboxClient.classifyText(request.getText()));
     }
 
-    @PostMapping("/import/excel")
-    public ResponseEntity<String> importFaq(@RequestParam("file") MultipartFile file) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            Sheet sheet = workbook.getSheetAt(0);
-
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // пропускаем заголовок
-
-                String category = row.getCell(0).getStringCellValue();
-                String subcategory = row.getCell(1).getStringCellValue();
-                String question = row.getCell(2).getStringCellValue();
-                String answer = row.getCell(3).getStringCellValue();
-                String priority = row.getCell(4).getStringCellValue();
-                String audience = row.getCell(5).getStringCellValue();
-
-                // Векторизация через SciBox
-                List<Double> embedding = sciboxClient.getEmbedding(question);
-
-                // Сохраняем напрямую в PostgreSQL через JDBC
-                embeddingRepository.saveEmbedding(
-                        category,
-                        subcategory,
-                        question,
-                        answer,
-                        priority,
-                        audience,
-                        embedding
-                );
-            }
-        }
-
-        return ResponseEntity.ok("Импорт FAQ успешно завершён ✅");
-    }
-
+    /// возвращает эмбеддинги для текста
     @PostMapping("/embedding")
     public ResponseEntity<List<Double>> getEmbedding(@RequestBody SupportRequest request) {
-        List<Double> embedding = sciboxClient.getEmbedding(request.getText());
-        return ResponseEntity.ok(embedding);
+        return ResponseEntity.ok(sciboxClient.getEmbedding(request.getText()));
+    }
+
+    /// семантический поиск по БЗ.
+    @PostMapping("/faq/search")
+    public ResponseEntity<List<Map<String, Object>>> semanticSearch(@RequestBody SupportRequest request) {
+        return ResponseEntity.ok(searchService.searchTopK(request.getText(), 3));
     }
 }
