@@ -1,14 +1,20 @@
 import { baseApi } from './baseApi'
-import { env } from '@/shared/config/env'
 
-type ClassifyResp = { category: string; subcategory?: string; score: number }
+export type ClassifyResponse = { 
+  category: string
+  confidence: number 
+}
 
 export const classifyApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    classify: build.query<ClassifyResp, { query: string }>({
-      query: ({ query }) => ({ url: env.CLASSIFY_PATH, method: 'POST', body: { query } })
+    classify: build.mutation<ClassifyResponse, { text: string }>({
+      query: (params) => ({ 
+        url: '/v1/classify', 
+        method: 'POST', 
+        body: params 
+      })
     })
   })
 })
 
-export const { useClassifyQuery } = classifyApi
+export const { useClassifyMutation } = classifyApi
