@@ -235,5 +235,10 @@ public class SciboxClient {
         }
     }
 
+    //собираем enriched query
+    public String enrichQuery(String normalisedText, List<String> retrievedEntities){
+        String enrichedQuery = normalisedText + " Ключевые сущности: " + String.join(", ", retrievedEntities);
+        return enrichedQuery;
+    }
 
 }
