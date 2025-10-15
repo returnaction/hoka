@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestClient;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -167,6 +168,41 @@ public class SciboxClient {
             }
         } catch (Exception e) {
             return "Ошибка при обработке запроса: " + e.getMessage();
+        }
+    }
+
+    //извлечение ключевых сущностей
+    public List<String> retrieveEntities(String text) {
+        String systemPrompt = String.join("\n",
+                "Ты — помощник, извлекающий ключевые сущности из текста.",
+                "Проанализируй вопрос пользователя и верни список сущностей в формате JSON-массива строк.",
+                "Пример: [\"сущность1\", \"сущность2\", \"сущность3\"]"
+        );
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.5,
+                "max_tokens", 256
+        );
+
+        try {
+            Map<String, Object> res = postJson("/chat/completions", body);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) res.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                String content = (String) message.get("content");
+
+                ObjectMapper mapper = new ObjectMapper();
+                return mapper.readValue(content, new TypeReference<List<String>>() {});
+            } else {
+                return List.of("Ответ не получен или пуст.");
+            }
+        } catch (Exception e) {
+            return List.of("Ошибка при обработке запроса: " + e.getMessage());
         }
     }
 
