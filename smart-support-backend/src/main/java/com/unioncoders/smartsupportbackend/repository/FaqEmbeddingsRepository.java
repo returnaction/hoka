@@ -73,4 +73,81 @@ public class FaqEmbeddingsRepository {
                 .map(d -> String.format(Locale.US, "%.10f", d))
                 .collect(Collectors.joining(",", "[", "]"));
     }
+    /*
+    *
+    *
+    *
+    *
+    *
+  //извлечение вопросов для категории (debug)
+public Map<String, List<String>> getQuestionsGroupedByCategory() {
+    String sql = "SELECT category, question FROM faq_embeddings";
+
+    return jdbc.query(sql, rs -> {
+        Map<String, List<String>> result = new HashMap<>();
+        while (rs.next()) {
+            String category = rs.getString("category");
+            String question = rs.getString("question");
+            result.computeIfAbsent(category, k -> new ArrayList<>()).add(question);
+        }
+        return result;
+    });
+}
+
+//извлечение векторов для категории
+public Map<String, List<List<Double>>> getEmbeddingsGroupedByCategory() {
+    String sql = "SELECT category, embedding FROM faq_embeddings";
+
+    return jdbc.query(sql, rs -> {
+        Map<String, List<List<Double>>> result = new HashMap<>();
+        while (rs.next()) {
+            String category = rs.getString("category");
+            String embeddingStr = rs.getString("embedding"); // формат: [0.123, -0.456, ...]
+
+            List<Double> embedding = parseVector(embeddingStr);
+            result.computeIfAbsent(category, k -> new ArrayList<>()).add(embedding);
+        }
+        return result;
+    });
+}
+
+private static String toVectorLiteral(List<Double> v) {
+    return v.stream() .map(d -> String.format(Locale.US, "%.10f", d)) .collect(Collectors.joining(",", "[", "]"));
+}
+
+//извлечение векторов для субкатегории
+public Map<String, List<List<Double>>> getEmbeddingsGroupedBySubcategory(String category) {
+    String sql = "SELECT subcategory, embedding FROM faq_embeddings WHERE category = ?";
+
+    return jdbc.query(sql, new Object[]{category}, rs -> {
+        Map<String, List<List<Double>>> result = new HashMap<>();
+        while (rs.next()) {
+            String subcategory = rs.getString("subcategory");
+            String embeddingStr = rs.getString("embedding"); // format: [0.123, -0.456, ...]
+
+            List<Double> embedding = parseVector(embeddingStr);
+            result.computeIfAbsent(subcategory, k -> new ArrayList<>()).add(embedding);
+        }
+        return result;
+    });
+}
+
+*
+* //извлечение векторов из субкатегории
+public List<Double> getEmbeddingsFromSubcategory(String subcategory) {
+    String sql = "SELECT embedding FROM faq_embeddings WHERE subcategory = ?";
+
+    return jdbc.query(sql, new Object[]{subcategory}, rs -> {
+        Map<String, List<List<Double>>> result = new HashMap<>();
+        while (rs.next()) {
+            String embeddingStr = rs.getString("embedding"); // format: [0.123, -0.456, ...]
+
+            List<Double> embedding = parseVector(embeddingStr);
+            result.computeIfAbsent(subcategory, k -> new ArrayList<>()).add(embedding);
+        }
+        return result;
+    });
+}
+
+    * */
 }
