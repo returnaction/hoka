@@ -1,6 +1,7 @@
 package com.unioncoders.smartsupportbackend.service;
 
 import com.unioncoders.smartsupportbackend.model.SciboxResponse;
+import com.unioncoders.smartsupportbackend.model.ChangedAnswerResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -80,5 +81,59 @@ public class SciboxClient {
             return result;
         }
     }
+
+    public ChangedAnswerResponse normaliseText(String text) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + apiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Собираем категории и подкатегории в строку
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("Ты — аналитик клиентских обращений в банке.\n");
+        promptBuilder.append("Твоя задача — переформулировать вопрос клиента, если он:\n");
+        promptBuilder.append("— содержит эмоциональные выражения, жалобы или агрессию;\n");
+        promptBuilder.append("— использует жаргон или разговорные фразы;\n");
+        promptBuilder.append("Если вопрос уже нейтральный и понятный — верни его без изменений.\n");
+        promptBuilder.append("Если требуется переформулировка — перепиши его строго в виде запроса, без обращения к клиенту, без извинений, без вопросов от лица поддержки.\n");
+        promptBuilder.append("Просто верни переформулированный текст.");
+
+
+        String systemPrompt = promptBuilder.toString();
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.3,
+                "max_tokens", 256
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        ChangedAnswerResponse result = new ChangedAnswerResponse();
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(baseUrl, request, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> responseBody = response.getBody();
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                    String content = (String) message.get("content");
+                    result.setText(content);
+                } else {
+                    result.setText("Ответ не получен или пуст.");
+                }
+            } else {
+                result.setText("Ошибка при получении ответа от модели.");
+            }
+        } catch (Exception e) {
+            result.setText("Ошибка при обработке запроса: " + e.getMessage());
+        }
+
+        return result;
+    }
+
 
 }
