@@ -135,5 +135,52 @@ public class SciboxClient {
         return result;
     }
 
+    public ChangedAnswerResponse changeQuestionToSimilarText(String text) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + apiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Собираем категории и подкатегории в строку
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("Переформулируй вопрос другими словами, чтобы суть осталась та же\n");
+
+
+        String systemPrompt = promptBuilder.toString();
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.3,
+                "max_tokens", 256
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+        ChangedAnswerResponse result = new ChangedAnswerResponse();
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(baseUrl, request, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<?, ?> responseBody = response.getBody();
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                    String content = (String) message.get("content");
+                    result.setText(content);
+                } else {
+                    result.setText("Ответ не получен или пуст.");
+                }
+            } else {
+                result.setText("Ошибка при получении ответа от модели.");
+            }
+        } catch (Exception e) {
+            result.setText("Ошибка при обработке запроса: " + e.getMessage());
+        }
+
+        return result;
+    }
+
 
 }
