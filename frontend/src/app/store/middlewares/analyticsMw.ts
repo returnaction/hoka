@@ -1,1 +1,1 @@
-export const analyticsMw = (api:any)=>(next:any)=>(action:any)=>next(action)
+export const analyticsMw = (_api:any)=>(next:any)=>(action:any)=>next(action)

@@ -1,1 +1,1 @@
-export const toastsMw = (api:any)=>(next:any)=>(action:any)=>next(action);
+export const toastsMw = (_api:any)=>(next:any)=>(action:any)=>next(action);
