@@ -20,7 +20,7 @@ export const kbApi = baseApi.injectEndpoints({
     // Семантический поиск - возвращает категорию + кандидаты
     semanticSearch: build.mutation<KbSearchResponse, { text: string; topK?: number }>({
       query: (params) => ({
-        url: '/v1/classify/semantic',
+        url: '/api/v1/classify/hybrid',
         method: 'POST',
         body: { text: params.text },
         params: { topK: params.topK || 3 }
