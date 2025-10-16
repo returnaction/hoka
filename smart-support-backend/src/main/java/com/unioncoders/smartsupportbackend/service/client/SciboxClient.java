@@ -213,10 +213,10 @@ public class SciboxClient {
      */
     public List<String> retrieveEntities(String text) {
         String systemPrompt = String.join("\n",
-                "Ты — помощник, извлекающий ключевые сущности из текста.",
+                "Ты — помощник, извлекающий ключевые сущности из текста клиента банка.",
+                "Сущность — это важный объект запроса (продукт, услуга, вклад, карта и т.д.).",
                 "Верни строго JSON-массив строк БЕЗ дополнительного текста.",
-                "Пример: [\"сущность1\", \"сущность2\"]",
-                "Никаких пояснений/Markdown."
+                "Пример: [\"СуперСемь\"]"
         );
 
         Map<String, Object> body = Map.of(
@@ -349,7 +349,7 @@ public class SciboxClient {
         return category;
     }
 
-    /** Считает косинусные сходства с центроидами категорий */
+    /** Считает косинусные сходства категорий */
     private Map<String, Double> computeCategorySimilarities(
             List<Double> embeddedQuestion,
             Map<String, List<List<Double>>> embeddingsByCategory
@@ -573,6 +573,49 @@ public class SciboxClient {
         // Вызываем приватный метод внутри класса
         return resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, embeddingsByCategory, 0.7, 0);
     }
+
+    public void testSubcategoryResolution(String category, String question) {
+
+        System.out.println("\n🔹 Тест подкатегории для категории: " + category);
+        System.out.println("Вопрос: " + question);
+
+        // 1️⃣ Нормализуем вопрос
+        String normalized = normaliseText(question);
+
+        // 2️⃣ Извлекаем сущности
+        List<String> entities = retrieveEntities(normalized);
+
+        // 3️⃣ Обогащаем запрос
+        String enriched = enrichQuery(normalized, entities);
+
+        // 4️⃣ Получаем эмбеддинг вопроса
+        List<Double> embedded = getEmbedding(enriched);
+
+        // 5️⃣ Загружаем эмбеддинги подкатегорий в рамках категории
+        Map<String, List<List<Double>>> embeddingsBySubcategory =
+                faqEmbeddingsRepository.getEmbeddingsGroupedBySubcategory(category);
+
+        if (embeddingsBySubcategory == null || embeddingsBySubcategory.isEmpty()) {
+            System.out.println("⚠️ Для категории " + category + " нет подкатегорий в базе.");
+            return;
+        }
+
+        // 6️⃣ Определяем подкатегорию
+        String subcategory = resolveCategoryWithEmbeddings(
+                enriched,
+                embedded,
+                embeddingsBySubcategory,
+                0.7,  // порог уверенности
+                0     // количество повторов
+        );
+
+        if (subcategory == null || subcategory.isBlank()) {
+            System.out.println("❌ Подкатегория не определена.");
+        } else {
+            System.out.println("✅ Определена подкатегория: " + subcategory);
+        }
+    }
+
 
 
 }
