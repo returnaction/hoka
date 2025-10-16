@@ -39,7 +39,7 @@ public class SupportController {
     }
 
     /// 2.1 делаем семантический поиск
-    @PostMapping("/classify/semantic")
+    @PostMapping("/classify/hybrid")
     public Map<String, Object> classifySemantic(@RequestBody SupportRequest req,
                                                 @RequestParam(defaultValue = "3") int topK) {
         return searchService.classify(req.getText(), topK);
@@ -52,7 +52,7 @@ public class SupportController {
     }
 
     /// 4.1
-    @PostMapping("/classify/hybrid")
+    @PostMapping("/classify/semantic")
     public ResponseEntity<Map<String, Object>> classifyHybrid(
             @RequestBody SupportRequest req,
             @RequestParam(defaultValue = "3") int topK,
