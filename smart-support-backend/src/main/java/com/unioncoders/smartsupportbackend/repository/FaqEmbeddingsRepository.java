@@ -198,26 +198,21 @@ public class FaqEmbeddingsRepository {
         });
     }
 
-    public List<List<Double>> getEmbeddingsFromSubcategory(String subcategory) {
-        String sql = "SELECT embedding FROM faq_embeddings WHERE subcategory = :subcategory";
+    public Map<String, List<Double>> getEmbeddingsFromSubcategory(String subcategory) {
+        String sql = "SELECT question, embedding FROM faq_embeddings WHERE subcategory = :subcategory";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("subcategory", subcategory);
 
         return jdbc.query(sql, params, rs -> {
-            List<List<Double>> embeddings = new ArrayList<>();
+            Map<String, List<Double>> result = new HashMap<>();
             while (rs.next()) {
+                String question = rs.getString("question");
                 String embeddingStr = rs.getString("embedding");
                 List<Double> embedding = parseVector(embeddingStr);
-                embeddings.add(embedding);
+                result.put(question, embedding);
             }
-            return embeddings;
+            return result;
         });
     }
-
-
-
-
-
-
 }
