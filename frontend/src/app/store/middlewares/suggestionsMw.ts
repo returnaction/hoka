@@ -18,6 +18,11 @@ suggestionsMw.startListening({
         kbApi.endpoints.semanticSearch.initiate({ text, topK: 5 })
       ).unwrap()
 
+      // Проверяем наличие кандидатов
+      if (!response || !response.candidates || !Array.isArray(response.candidates)) {
+        throw new Error('Invalid response format: candidates missing or not an array')
+      }
+
       // Преобразуем кандидатов в шаблоны
       const templates: Template[] = response.candidates.map((c: KbCandidate, idx: number) => ({
         code: `KB-${c.id}`,

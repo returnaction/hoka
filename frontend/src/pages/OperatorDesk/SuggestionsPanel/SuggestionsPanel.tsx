@@ -20,16 +20,16 @@ export const SuggestionsPanel: React.FC = () => {
 
   const renderPlaceholder = () => (
     <Fade in>
-      <Stack spacing={2.5} alignItems="center" sx={{ py: 4 }}>
+      <Stack spacing={2.5} alignItems="center" sx={{ py: 3 }}>
         <Box 
-          sx={{ 
+          sx={{
             width: '100%', 
-            height: 120,
+            height: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'linear-gradient(135deg, rgba(155,123,255,0.08) 0%, rgba(91,140,255,0.08) 100%)',
-            borderRadius: 3,
+            borderRadius: 2.5,
             border: '2px dashed rgba(155,123,255,0.3)',
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -38,9 +38,9 @@ export const SuggestionsPanel: React.FC = () => {
             }
           }}
         >
-          <AutoAwesomeIcon sx={{ fontSize: 48, color: 'secondary.main', opacity: 0.5 }} />
+          <AutoAwesomeIcon sx={{ fontSize: 42, color: 'secondary.main', opacity: 0.5 }} />
         </Box>
-        <Typography variant="body2" sx={{ textAlign: 'center', opacity: 0.75 }}>
+        <Typography variant="body2" sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.75)', px: 2 }}>
           Отправьте сообщение от клиента, чтобы получить подсказки из базы знаний
         </Typography>
         <Tooltip title="Открыть все шаблоны">
@@ -51,6 +51,7 @@ export const SuggestionsPanel: React.FC = () => {
             startIcon={<ListAltIcon />}
             sx={{
               transition: 'all 0.2s ease',
+              color: 'rgba(255,255,255,0.9)',
               '&:hover': {
                 transform: 'translateY(-2px)',
                 boxShadow: '0 8px 20px rgba(91,140,255,0.3)'
@@ -77,19 +78,32 @@ export const SuggestionsPanel: React.FC = () => {
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
         background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 2,
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.5)'
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+        },
+        '&::-webkit-scrollbar': {
+          width: '8px'
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '4px'
         },
         '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(155,123,255,0.3)'
+          background: 'rgba(155,123,255,0.4)',
+          borderRadius: '4px',
+          '&:hover': {
+            background: 'rgba(155,123,255,0.6)'
+          }
         }
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <AutoAwesomeIcon sx={{ color: 'secondary.main' }} />
-        <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }}>
+        <AutoAwesomeIcon sx={{ color: 'secondary.main', fontSize: 24 }} />
+        <Typography variant="h6" sx={{ fontWeight: 700, flex: 1, color: 'rgba(255,255,255,0.95)' }}>
           Шаблон ответа
         </Typography>
         {items.length > 0 && (
@@ -98,7 +112,7 @@ export const SuggestionsPanel: React.FC = () => {
             size="small" 
             color="secondary" 
             variant="outlined"
-            sx={{ fontWeight: 600 }}
+            sx={{ fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}
           />
         )}
       </Stack>
@@ -114,6 +128,7 @@ export const SuggestionsPanel: React.FC = () => {
           </Stack>
         </Fade>
       )}
+      
 
       {status === 'empty' && (
         <Fade in>
@@ -210,14 +225,14 @@ export const SuggestionsPanel: React.FC = () => {
 
                 <CardContent sx={{ pt: top.recommendation ? 3 : 2 }}>
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                    <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, color: 'secondary.light' }}>
+                    <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700, color: 'rgba(255,255,255,0.95)' }}>
                       {top.code} · "{top.title}"
                     </Typography>
                   </Stack>
 
                   {top.summary && (
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
                         {top.summary}
                       </Typography>
                       <LinearProgress 
@@ -241,9 +256,9 @@ export const SuggestionsPanel: React.FC = () => {
                     </Box>
                   )}
 
-                  <Divider sx={{ my: 2, opacity: 0.3 }} />
+                  <Divider sx={{ my: 2, opacity: 0.2 }} />
 
-                  <Typography variant="caption" sx={{ display: 'block', mb: 1, opacity: 0.75, fontWeight: 600 }}>
+                  <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
                     Текст шаблона:
                   </Typography>
                   <Typography
@@ -251,7 +266,7 @@ export const SuggestionsPanel: React.FC = () => {
                     sx={{ 
                       whiteSpace: 'pre-wrap', 
                       lineHeight: 1.6,
-                      color: 'rgba(255,255,255,0.9)',
+                      color: 'rgba(255,255,255,0.95)',
                       p: 1.5,
                       background: 'rgba(0,0,0,0.2)',
                       borderRadius: 2,
@@ -316,13 +331,14 @@ export const SuggestionsPanel: React.FC = () => {
           sx: { 
             width: 480, 
             p: 3,
+            pt: '88px', // Отступ от верхней панели (HeaderBar 72px + запас)
             background: 'linear-gradient(180deg, rgba(20,20,35,0.98) 0%, rgba(15,15,25,0.98) 100%)',
             backdropFilter: 'blur(12px)'
           } 
         }}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'rgba(255,255,255,0.95)' }}>
             Все найденные шаблоны ({items.length})
           </Typography>
           <IconButton 
@@ -384,8 +400,8 @@ export const SuggestionsPanel: React.FC = () => {
                   <ListItemText
                     primary={`${t.code} · ${t.title}`}
                     secondary={t.source}
-                    primaryTypographyProps={{ sx: { fontWeight: 700, fontSize: '0.95rem' } }}
-                    secondaryTypographyProps={{ sx: { fontSize: '0.75rem', opacity: 0.7 } }}
+                    primaryTypographyProps={{ sx: { fontWeight: 700, fontSize: '0.95rem', color: 'rgba(255,255,255,0.95)' } }}
+                    secondaryTypographyProps={{ sx: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' } }}
                     sx={{ flex: 1 }}
                   />
                   {t.recommendation && (
@@ -399,7 +415,7 @@ export const SuggestionsPanel: React.FC = () => {
                 </Stack>
                 {t.summary && (
                   <Box sx={{ width: '100%' }}>
-                    <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mb: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 0.5 }}>
                       {t.summary}
                     </Typography>
                     <LinearProgress 

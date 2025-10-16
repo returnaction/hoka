@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./smart-support-backend
+      dockerfile: Dockerfile
+    container_name: smart-support-backend-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - DB_URL=jdbc:postgresql://db:5432/assist?sslmode=disable
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - SCIBOX_BASE_URL=https://llm.t1v.scibox.tech/v1
+      - SCIBOX_TOKEN=sk-IpfakHMmVVUrcAZwANxPMw
+      - SCIBOX_EMBED_MODEL=bge-m3
+      - SCIBOX_CHAT_MODEL=Qwen2.5-72B-Instruct-AWQ
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - CORS_ALLOWED_HEADERS=*
+      - CORS_ALLOW_CREDENTIALS=true
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./smart-support-backend/src:/app/src
+    command: ./mvnw spring-boot:run
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: scibox-frontend-dev
+    ports:
+      - "5173:5173"  # Vite dev server port
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tsconfig.app.json:/app/tsconfig.app.json
+      - ./frontend/package.json:/app/package.json
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  db:
+    image: ankane/pgvector:latest
+    container_name: pgvector-demo-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: assist
+      POSTGRES_INITDB_ARGS: "--auth=scram-sha-256"
+    ports:
+      - "5000:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d assist"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
