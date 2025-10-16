@@ -38,6 +38,19 @@ export const SettingsPage: React.FC = () => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Валидация размера файла (10 МБ)
+    const maxSize = 10 * 1024 * 1024 // 10 MB
+    if (file.size > maxSize) {
+      setUploadResult({
+        success: false,
+        message: `Файл слишком большой (${(file.size / 1024 / 1024).toFixed(2)} МБ). Максимум 10 МБ.`
+      })
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
     setUploading(true)
     setUploadResult(null)
 
@@ -50,20 +63,32 @@ export const SettingsPage: React.FC = () => {
         body: formData
       })
 
-      const result = await response.json()
+      // Проверяем, что ответ не пустой
+      const text = await response.text()
+      let result = null
+      
+      try {
+        result = text ? JSON.parse(text) : null
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Response text:', text)
+        throw new Error('Сервер вернул некорректный ответ')
+      }
       
       if (response.ok) {
         setUploadResult({ 
           success: true, 
-          message: `Успешно загружено ${result.inserted} записей` 
+          message: result?.inserted 
+            ? `Успешно загружено ${result.inserted} записей из файла "${file.name}"` 
+            : 'Файл успешно загружен'
         })
       } else {
         setUploadResult({ 
           success: false, 
-          message: 'Ошибка при загрузке файла' 
+          message: result?.error || result?.message || `Ошибка: ${response.status} ${response.statusText}` 
         })
       }
     } catch (error) {
+      console.error('Upload error:', error)
       setUploadResult({ 
         success: false, 
         message: `Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
@@ -319,46 +344,58 @@ export const SettingsPage: React.FC = () => {
                   Сохранить изменения
                 </Button>
 
-                <Box sx={{ position: 'relative' }}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                    id="faq-upload-input"
-                  />
-                  <label htmlFor="faq-upload-input">
-                    <Button 
-                      component="span"
-                      variant="outlined"
-                      size="large"
-                      disabled={uploading}
-                      startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
-                      sx={{
-                        px: 4,
-                        py: 1.5,
-                        fontWeight: 700,
-                        borderWidth: 2,
-                        borderColor: 'primary.main',
-                        color: 'primary.main',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
+                <Stack spacing={1}>
+                  <Box sx={{ position: 'relative' }}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                      id="faq-upload-input"
+                    />
+                    <label htmlFor="faq-upload-input">
+                      <Button 
+                        component="span"
+                        variant="outlined"
+                        size="large"
+                        disabled={uploading}
+                        startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                        sx={{
+                          px: 4,
+                          py: 1.5,
+                          fontWeight: 700,
                           borderWidth: 2,
-                          transform: 'translateY(-2px) scale(1.02)',
-                          boxShadow: '0 12px 32px rgba(91,140,255,0.3)',
-                          background: 'rgba(91,140,255,0.1)'
-                        },
-                        '&:disabled': {
-                          borderWidth: 2,
-                          borderColor: 'rgba(91,140,255,0.3)'
-                        }
-                      }}
-                    >
-                      {uploading ? 'Загрузка...' : 'Загрузить БД (Excel)'}
-                    </Button>
-                  </label>
-                </Box>
+                          borderColor: 'primary.main',
+                          color: 'primary.main',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            borderWidth: 2,
+                            transform: 'translateY(-2px) scale(1.02)',
+                            boxShadow: '0 12px 32px rgba(91,140,255,0.3)',
+                            background: 'rgba(91,140,255,0.1)'
+                          },
+                          '&:disabled': {
+                            borderWidth: 2,
+                            borderColor: 'rgba(91,140,255,0.3)'
+                          }
+                        }}
+                      >
+                        {uploading ? 'Загрузка...' : 'Загрузить БД (Excel)'}
+                      </Button>
+                    </label>
+                  </Box>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: '0.75rem',
+                      ml: 1
+                    }}
+                  >
+                    Поддерживаются файлы .xlsx и .xls (до 10 МБ)
+                  </Typography>
+                </Stack>
               </Stack>
             </Stack>
           </Box>
