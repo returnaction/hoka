@@ -276,9 +276,11 @@ public static double cosineSimilarity(List<Double> a, List<Double> b) {
 public String resolveCategoryWithEmbeddings(
         String enrichedQuestion,
         List<Double> embeddedQuestion,
-        Map<String, List<List<Double>>> embeddingsByCategory
+        Map<String, List<List<Double>>> embeddingsByCategory,
+        double threshold
+
 ) {
-    return resolveCategoryWithEmbeddings(enrichedQuestion, embeddedQuestion, embeddingsByCategory, 0);
+    return resolveCategoryWithEmbeddings(enrichedQuestion, embeddedQuestion, embeddingsByCategory,double threshold, 0);
 }
 
 private String resolveCategoryWithEmbeddings(
@@ -359,6 +361,7 @@ private String resolveCategoryWithEmbeddings(
                             rephrasedEnrichedQuery,
                             embeddedQuestion, // можно пересчитать embedding, если нужно
                             embeddingsByCategory,
+                            threshold,
                             retryCount + 1
                     );
                 }
@@ -470,10 +473,10 @@ public String retrieveTheQuestion(String question){
 
     Map<String, List<List<Double>>> EmbeddingsGrouppedByCategories = getEmbeddingsGroupedByCategory();
 
-    String category = resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, EmbeddingsGrouppedByCategories);
+    String category = resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, EmbeddingsGrouppedByCategories, 0.7);
     if (category!=""){
         Map<String, List<List<Double>>> EmbeddingsGrouppedBySubcategories = getEmbeddingsGroupedBySubcategory(category);
-        String subcategory = resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, EmbeddingsGrouppedBySubcategories);
+        String subcategory = resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, EmbeddingsGrouppedBySubcategories, 0.7);
         if(subcategory!=""){
             List<Double> embeddingsFromSubcategory = getEmbeddingsFromSubcategory(subcategory);
             String mostSimilarQuestion = findMostSimilarQuestion(enrichedQuery, embeddedQuestion,embeddingsFromSubcategory, 0.7);
