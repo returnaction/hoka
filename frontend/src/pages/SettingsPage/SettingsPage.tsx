@@ -1,8 +1,9 @@
 import React from 'react'
-import { Box, Button, Container, Paper, Stack, TextField, Typography, Alert, Snackbar, Fade, Divider, Chip } from '@mui/material'
+import { Box, Button, Container, Paper, Stack, TextField, Typography, Alert, Snackbar, Fade, Divider, Chip, CircularProgress } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import SaveIcon from '@mui/icons-material/Save'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import { useAppDispatch, useAppSelector } from '@/shared/hooks'
 import { updateConfig } from '@/shared/config/config.slice'
 
@@ -10,6 +11,9 @@ export const SettingsPage: React.FC = () => {
   const dispatch = useAppDispatch()
   const config = useAppSelector(s => s.config)
   const [saved, setSaved] = React.useState(false)
+  const [uploading, setUploading] = React.useState(false)
+  const [uploadResult, setUploadResult] = React.useState<{ success: boolean; message: string } | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -30,17 +34,59 @@ export const SettingsPage: React.FC = () => {
     setSaved(true)
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setUploadResult(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/api/v1/faq/import`, {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        setUploadResult({ 
+          success: true, 
+          message: `Успешно загружено ${result.inserted} записей` 
+        })
+      } else {
+        setUploadResult({ 
+          success: false, 
+          message: 'Ошибка при загрузке файла' 
+        })
+      }
+    } catch (error) {
+      setUploadResult({ 
+        success: false, 
+        message: `Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
+      })
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Fade in>
         <Paper 
           sx={{ 
             p: 4,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
             transition: 'all 0.3s ease',
             '&:hover': {
-              transform: 'translateY(-4px)',
-              boxShadow: '0 20px 48px rgba(0,0,0,0.6)'
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
             }
           }}
         >
@@ -251,7 +297,7 @@ export const SettingsPage: React.FC = () => {
 
               <Divider sx={{ my: 1, opacity: 0.2 }} />
 
-              <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
+              <Stack direction="row" spacing={2} sx={{ pt: 1 }} flexWrap="wrap" useFlexGap>
                 <Button 
                   type="submit" 
                   variant="contained"
@@ -272,6 +318,47 @@ export const SettingsPage: React.FC = () => {
                 >
                   Сохранить изменения
                 </Button>
+
+                <Box sx={{ position: 'relative' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                    id="faq-upload-input"
+                  />
+                  <label htmlFor="faq-upload-input">
+                    <Button 
+                      component="span"
+                      variant="outlined"
+                      size="large"
+                      disabled={uploading}
+                      startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                      sx={{
+                        px: 4,
+                        py: 1.5,
+                        fontWeight: 700,
+                        borderWidth: 2,
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          borderWidth: 2,
+                          transform: 'translateY(-2px) scale(1.02)',
+                          boxShadow: '0 12px 32px rgba(91,140,255,0.3)',
+                          background: 'rgba(91,140,255,0.1)'
+                        },
+                        '&:disabled': {
+                          borderWidth: 2,
+                          borderColor: 'rgba(91,140,255,0.3)'
+                        }
+                      }}
+                    >
+                      {uploading ? 'Загрузка...' : 'Загрузить БД (Excel)'}
+                    </Button>
+                  </label>
+                </Box>
               </Stack>
             </Stack>
           </Box>
@@ -297,6 +384,32 @@ export const SettingsPage: React.FC = () => {
           }}
         >
           Настройки успешно сохранены!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar 
+        open={uploadResult !== null} 
+        autoHideDuration={5000} 
+        onClose={() => setUploadResult(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          severity={uploadResult?.success ? 'success' : 'error'} 
+          onClose={() => setUploadResult(null)}
+          icon={<CheckCircleIcon />}
+          sx={{
+            borderRadius: 2.5,
+            background: uploadResult?.success 
+              ? 'linear-gradient(135deg, rgba(60,203,127,0.95) 0%, rgba(34,177,110,0.95) 100%)'
+              : 'linear-gradient(135deg, rgba(244,67,54,0.95) 0%, rgba(211,47,47,0.95) 100%)',
+            backdropFilter: 'blur(8px)',
+            fontWeight: 600,
+            boxShadow: uploadResult?.success 
+              ? '0 8px 32px rgba(60,203,127,0.4)'
+              : '0 8px 32px rgba(244,67,54,0.4)'
+          }}
+        >
+          {uploadResult?.message}
         </Alert>
       </Snackbar>
     </Container>

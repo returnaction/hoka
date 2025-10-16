@@ -51,16 +51,18 @@ export const ChatPanel: React.FC = () => {
         p: 3, 
         mb: 2,
         background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 2,
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         '&:hover': {
           transform: 'translateY(-2px)',
-          boxShadow: '0 16px 40px rgba(0,0,0,0.5)'
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
         }
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <HistoryIcon sx={{ color: 'primary.main' }} />
-        <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }}>
+        <HistoryIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+        <Typography variant="h6" sx={{ fontWeight: 700, flex: 1, color: 'rgba(255,255,255,0.95)' }}>
           История переписки
         </Typography>
         <Chip 
@@ -68,7 +70,10 @@ export const ChatPanel: React.FC = () => {
           size="small" 
           color="primary" 
           variant="outlined"
-          sx={{ fontWeight: 600 }}
+          sx={{ 
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.9)'
+          }}
         />
       </Stack>
 
@@ -78,11 +83,22 @@ export const ChatPanel: React.FC = () => {
         overflow: 'auto', 
         mb: 2.5, 
         p: 2, 
-        borderRadius: 3, 
-        background: 'rgba(0,0,0,0.25)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 2, 
+        background: 'rgba(0,0,0,0.2)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        '&::-webkit-scrollbar': {
+          width: '8px'
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '4px'
+        },
         '&::-webkit-scrollbar-thumb': {
-          background: 'rgba(91,140,255,0.3)'
+          background: 'rgba(91,140,255,0.4)',
+          borderRadius: '4px',
+          '&:hover': {
+            background: 'rgba(91,140,255,0.6)'
+          }
         }
       }}>
         {messages.map((m, i) => (
@@ -104,6 +120,10 @@ export const ChatPanel: React.FC = () => {
                 size="small"
                 color={m.author === 'client' ? 'primary' : 'success'}
                 sx={{ 
+                  display: 'flex',
+                  verticalAlign: 'middle',
+                  alignItems: 'center',
+                  height: "100%",
                   minWidth: 110,
                   fontWeight: 600,
                   boxShadow: m.author === 'client' 
@@ -122,20 +142,20 @@ export const ChatPanel: React.FC = () => {
                   p: 1.5,
                   pt: 1.2,
                   background: m.author === 'client' 
-                    ? 'linear-gradient(135deg, rgba(91,140,255,0.12) 0%, rgba(91,140,255,0.06) 100%)'
-                    : 'linear-gradient(135deg, rgba(60,203,127,0.12) 0%, rgba(60,203,127,0.06) 100%)',
-                  border: `1px solid ${m.author === 'client' ? 'rgba(91,140,255,0.2)' : 'rgba(60,203,127,0.2)'}`,
-                  borderRadius: 2.5,
+                    ? 'linear-gradient(135deg, rgba(91,140,255,0.15) 0%, rgba(91,140,255,0.08) 100%)'
+                    : 'linear-gradient(135deg, rgba(60,203,127,0.15) 0%, rgba(60,203,127,0.08) 100%)',
+                  border: `1px solid ${m.author === 'client' ? 'rgba(91,140,255,0.25)' : 'rgba(60,203,127,0.25)'}`,
+                  borderRadius: 2,
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                   '&:hover': {
                     transform: 'translateX(4px)',
                     boxShadow: m.author === 'client'
-                      ? '0 8px 24px rgba(91,140,255,0.2)'
-                      : '0 8px 24px rgba(60,203,127,0.2)'
+                      ? '0 4px 16px rgba(91,140,255,0.25)'
+                      : '0 4px 16px rgba(60,203,127,0.25)'
                   }
                 }}
               >
-                <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ lineHeight: 1.6, color: 'rgba(255,255,255,0.95)' }}>
                   {m.text}
                 </Typography>
               </Paper>
@@ -150,6 +170,7 @@ export const ChatPanel: React.FC = () => {
         <Box sx={{ 
           mb: 2.5, 
           p: 2, 
+
           border: '2px dashed', 
           borderColor: 'primary.main', 
           borderRadius: 2.5, 
@@ -212,7 +233,7 @@ export const ChatPanel: React.FC = () => {
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <SupportAgentIcon sx={{ fontSize: 18, color: 'success.main' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'success.light' }}>
-          Оператор — вводит ответ…
+          Оператор — вводит ответ...
         </Typography>
       </Stack>
 

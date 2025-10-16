@@ -20,9 +20,9 @@ export const SuggestionsPanel: React.FC = () => {
 
   const renderPlaceholder = () => (
     <Fade in>
-      <Stack spacing={2.5} alignItems="center" sx={{ py: 4 }}>
+      <Stack spacing={2.5} alignItems="center" sx={{ py: 4, pt: 12 }}>
         <Box 
-          sx={{ 
+          sx={{
             width: '100%', 
             height: 120,
             display: 'flex',
@@ -316,6 +316,7 @@ export const SuggestionsPanel: React.FC = () => {
           sx: { 
             width: 480, 
             p: 3,
+            pt: '88px', // Отступ от верхней панели (HeaderBar 72px + запас)
             background: 'linear-gradient(180deg, rgba(20,20,35,0.98) 0%, rgba(15,15,25,0.98) 100%)',
             backdropFilter: 'blur(12px)'
           } 

@@ -10,7 +10,7 @@ export const ApiTestPage: React.FC = () => {
     response?: string
   }[]>([])
 
-  const testEndpoint = async (name: string, path: string, method: 'GET' | 'POST' = 'GET', body?: any) => {
+  const testEndpoint = async (name: string, path: string, method: 'GET' | 'POST' = 'GET', body?: Record<string, unknown>) => {
     const url = config.apiBaseUrl + path
     try {
       const response = await fetch(url, {
