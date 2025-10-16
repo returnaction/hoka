@@ -73,4 +73,151 @@ public class FaqEmbeddingsRepository {
                 .map(d -> String.format(Locale.US, "%.10f", d))
                 .collect(Collectors.joining(",", "[", "]"));
     }
+
+
+    //debugging purposes
+    public Map<String, List<String>> getQuestionsGroupedByCategory() {
+        String sql = "SELECT category, question FROM faq_embeddings";
+
+        return jdbc.query(sql, rs -> {
+            Map<String, List<String>> result = new HashMap<>();
+            while (rs.next()) {
+                String category = rs.getString("category");
+                String question = rs.getString("question");
+                result.computeIfAbsent(category, k -> new ArrayList<>()).add(question);
+            }
+            return result;
+        });
+    }
+
+
+    public Map<String, List<List<Double>>> getEmbeddingsGroupedByCategory() {
+        String sql = "SELECT category, embedding FROM faq_embeddings";
+
+        return jdbc.query(sql, rs -> {
+            Map<String, List<List<Double>>> result = new HashMap<>();
+            while (rs.next()) {
+                String category = rs.getString("category");
+                String embeddingStr = rs.getString("embedding"); // формат: [0.123, -0.456, ...]
+
+                List<Double> embedding = parseVector(embeddingStr);
+                result.computeIfAbsent(category, k -> new ArrayList<>()).add(embedding);
+            }
+            return result;
+        });
+    }
+
+    /**
+     * Преобразует строку вида "[0.123, -0.456, 0.789]" в List<Double>.
+     * Удаляет скобки, пробелы и парсит элементы.
+     */
+    private static List<Double> parseVector(String vectorStr) {
+        if (vectorStr == null || vectorStr.isBlank()) return List.of();
+
+        // Убираем квадратные скобки и возможные пробелы
+        String cleaned = vectorStr
+                .replace("[", "")
+                .replace("]", "")
+                .trim();
+
+        if (cleaned.isEmpty()) return List.of();
+
+        String[] parts = cleaned.split(",");
+
+        List<Double> result = new ArrayList<>(parts.length);
+        for (String p : parts) {
+            try {
+                result.add(Double.parseDouble(p.trim()));
+            } catch (NumberFormatException e) {
+                // На случай, если попадётся "null" или мусор
+                System.err.println("⚠️ Ошибка парсинга числа в векторе: " + p);
+            }
+        }
+        return result;
+    }
+
+//debugging
+    public Map<String, List<String>> getQuestionsGroupedBySubcategory(String category) {
+        String sql = "SELECT subcategory, question FROM faq_embeddings WHERE category = :category";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("category", category);
+
+        return jdbc.query(sql, params, rs -> {
+            Map<String, List<String>> result = new HashMap<>();
+            while (rs.next()) {
+                String subcategory = rs.getString("subcategory");
+                String question = rs.getString("question");
+
+                if (subcategory != null && !subcategory.isBlank()) {
+                    result.computeIfAbsent(subcategory, k -> new ArrayList<>()).add(question);
+                }
+            }
+            return result;
+        });
+    }
+
+
+    public Map<String, List<List<Double>>> getEmbeddingsGroupedBySubcategory(String category) {
+        String sql = "SELECT subcategory, embedding FROM faq_embeddings WHERE category = :category";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("category", category);
+
+        return jdbc.query(sql, params, rs -> {
+            Map<String, List<List<Double>>> result = new HashMap<>();
+            while (rs.next()) {
+                String subcategory = rs.getString("subcategory");
+                String embeddingStr = rs.getString("embedding");
+
+                List<Double> embedding = parseVector(embeddingStr);
+                if (subcategory != null && !subcategory.isBlank()) {
+                    result.computeIfAbsent(subcategory, k -> new ArrayList<>()).add(embedding);
+                }
+            }
+            return result;
+        });
+    }
+
+    //debugging
+    public List<String> getQuestionsFromSubcategory(String subcategory) {
+        String sql = "SELECT question FROM faq_embeddings WHERE subcategory = :subcategory";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("subcategory", subcategory);
+
+        return jdbc.query(sql, params, rs -> {
+            List<String> questions = new ArrayList<>();
+            while (rs.next()) {
+                String question = rs.getString("question");
+                if (question != null && !question.isBlank()) {
+                    questions.add(question);
+                }
+            }
+            return questions;
+        });
+    }
+
+    public List<List<Double>> getEmbeddingsFromSubcategory(String subcategory) {
+        String sql = "SELECT embedding FROM faq_embeddings WHERE subcategory = :subcategory";
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("subcategory", subcategory);
+
+        return jdbc.query(sql, params, rs -> {
+            List<List<Double>> embeddings = new ArrayList<>();
+            while (rs.next()) {
+                String embeddingStr = rs.getString("embedding");
+                List<Double> embedding = parseVector(embeddingStr);
+                embeddings.add(embedding);
+            }
+            return embeddings;
+        });
+    }
+
+
+
+
+
+
 }
