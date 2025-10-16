@@ -1,5 +1,6 @@
 package com.unioncoders.smartsupportbackend.service.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unioncoders.smartsupportbackend.config.SciboxProperties;
 import com.unioncoders.smartsupportbackend.model.SciboxResponse;
@@ -168,6 +169,75 @@ public class SciboxClient {
         } catch (Exception e) {
             return "Ошибка при обработке запроса: " + e.getMessage();
         }
+    }
+
+    //извлечение ключевых сущностей
+    public List<String> retrieveEntities(String text) {
+        String systemPrompt = String.join("\n",
+                "Ты — помощник, извлекающий ключевые сущности из текста.",
+                "Проанализируй вопрос пользователя и верни список сущностей в формате JSON-массива строк.",
+                "Пример: [\"сущность1\", \"сущность2\", \"сущность3\"]"
+        );
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.5,
+                "max_tokens", 256
+        );
+
+        try {
+            Map<String, Object> res = postJson("/chat/completions", body);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) res.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                String content = (String) message.get("content");
+
+                ObjectMapper mapper = new ObjectMapper();
+                return mapper.readValue(content, new TypeReference<List<String>>() {});
+            } else {
+                return List.of("Ответ не получен или пуст.");
+            }
+        } catch (Exception e) {
+            return List.of("Ошибка при обработке запроса: " + e.getMessage());
+        }
+    }
+
+    //перефразировать вопрос, когда не смогли в категорию добавить
+    public String  changeQuestionToSimilarText(String text) {
+        String systemPrompt = "Переформулируй вопрос для дальнейшей классификации другими словами, чтобы суть осталась та же\n";
+
+        Map<String, Object> body = Map.of(
+                "model", "Qwen2.5-72B-Instruct-AWQ",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", text)
+                ),
+                "temperature", 0.4,
+                "max_tokens", 256
+        );
+
+        try {
+            Map<String, Object> res = postJson("/chat/completions", body);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) res.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                return (String) message.get("content");
+            } else {
+                return "Ответ не получен или пуст.";
+            }
+        } catch (Exception e) {
+            return "Ошибка при обработке запроса: " + e.getMessage();
+        }
+    }
+
+    //собираем enriched query
+    public String enrichQuery(String normalisedText, List<String> retrievedEntities){
+        String enrichedQuery = normalisedText + " Ключевые сущности: " + String.join(", ", retrievedEntities);
+        return enrichedQuery;
     }
 
 }
