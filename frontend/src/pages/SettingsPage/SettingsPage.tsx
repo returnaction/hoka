@@ -402,6 +402,7 @@ export const SettingsPage: React.FC = () => {
         </Paper>
       </Fade>
       
+      {/* Уведомление о сохранении настроек */}
       <Snackbar 
         open={saved} 
         autoHideDuration={3000} 
@@ -424,31 +425,34 @@ export const SettingsPage: React.FC = () => {
         </Alert>
       </Snackbar>
 
-      <Snackbar 
-        open={uploadResult !== null} 
-        autoHideDuration={5000} 
-        onClose={() => setUploadResult(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert 
-          severity={uploadResult?.success ? 'success' : 'error'} 
+      {/* Уведомление о загрузке БД */}
+      {uploadResult && (
+        <Snackbar 
+          open={true} 
+          autoHideDuration={5000} 
           onClose={() => setUploadResult(null)}
-          icon={<CheckCircleIcon />}
-          sx={{
-            borderRadius: 2.5,
-            background: uploadResult?.success 
-              ? 'linear-gradient(135deg, rgba(60,203,127,0.95) 0%, rgba(34,177,110,0.95) 100%)'
-              : 'linear-gradient(135deg, rgba(244,67,54,0.95) 0%, rgba(211,47,47,0.95) 100%)',
-            backdropFilter: 'blur(8px)',
-            fontWeight: 600,
-            boxShadow: uploadResult?.success 
-              ? '0 8px 32px rgba(60,203,127,0.4)'
-              : '0 8px 32px rgba(244,67,54,0.4)'
-          }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          {uploadResult?.message}
-        </Alert>
-      </Snackbar>
+          <Alert 
+            severity={uploadResult.success ? 'success' : 'error'} 
+            onClose={() => setUploadResult(null)}
+            icon={<CheckCircleIcon />}
+            sx={{
+              borderRadius: 2.5,
+              background: uploadResult.success 
+                ? 'linear-gradient(135deg, rgba(60,203,127,0.95) 0%, rgba(34,177,110,0.95) 100%)'
+                : 'linear-gradient(135deg, rgba(244,67,54,0.95) 0%, rgba(211,47,47,0.95) 100%)',
+              backdropFilter: 'blur(8px)',
+              fontWeight: 600,
+              boxShadow: uploadResult.success 
+                ? '0 8px 32px rgba(60,203,127,0.4)'
+                : '0 8px 32px rgba(244,67,54,0.4)'
+            }}
+          >
+            {uploadResult.message}
+          </Alert>
+        </Snackbar>
+      )}
     </Container>
   )
 }

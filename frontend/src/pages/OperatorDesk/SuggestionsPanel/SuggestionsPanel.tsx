@@ -128,7 +128,7 @@ export const SuggestionsPanel: React.FC = () => {
           </Stack>
         </Fade>
       )}
-      
+
 
       {status === 'empty' && (
         <Fade in>
@@ -332,6 +332,11 @@ export const SuggestionsPanel: React.FC = () => {
             width: 480, 
             p: 3,
             pt: '88px', // Отступ от верхней панели (HeaderBar 72px + запас)
+            position: 'fixed',
+            top: 0,
+            bottom: 0,
+            height: '100vh',
+            overflowY: 'auto',
             background: 'linear-gradient(180deg, rgba(20,20,35,0.98) 0%, rgba(15,15,25,0.98) 100%)',
             backdropFilter: 'blur(12px)'
           } 
@@ -367,7 +372,7 @@ export const SuggestionsPanel: React.FC = () => {
           </Alert>
         )}
 
-        <List sx={{ maxHeight: 'calc(100vh - 180px)', overflow: 'auto' }}>
+        <List sx={{ pb: 2 }}>
           {items.map((t, i) => (
             <Fade in key={i} style={{ transitionDelay: `${i * 50}ms` }}>
               <ListItemButton
