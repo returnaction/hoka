@@ -51,12 +51,29 @@ public class SupportController {
         return ResponseEntity.ok(sciboxClient.classifyText(request.getText()));
     }
 
+    /// 4.1
+    @PostMapping("/classify/hybrid")
+    public ResponseEntity<Map<String, Object>> classifyHybrid(
+            @RequestBody SupportRequest req,
+            @RequestParam(defaultValue = "3") int topK,
+            @RequestParam(defaultValue = "0.6") double threshold
+    ) {
+        String text = req.getText();
+        if (text == null || text.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("Ошибка", "Текст не может быть пустым"));
+        }
+        Map<String, Object> result = searchService.hybridClassify(text, topK, threshold);
+        return ResponseEntity.ok(result);
+    }
+
     /// 3.1 health check - делает легкий вызов  /v1/embeddings с  текстом ping и возвращает true/false;
     @GetMapping(value = "/health/scibox", produces = "application/json")
     public Map<String, Object> sciboxHealth() {
         boolean ok = sciboxClient.healthCheck();
         return Map.of("scibox", ok ? "ok" : "down");
     }
+
+
 
 
 
