@@ -174,14 +174,18 @@ public class SciboxClient {
      */
     public String normaliseText(String text) {
         String systemPrompt = String.join("\n",
-                "Ты — аналитик клиентских обращений в банке.",
-                "Если вопрос уже нейтральный и понятный — верни его без изменений.",
-                "Если требуется переформулировка — перепиши строго в виде запроса:",
-                "- без обращения к клиенту,",
-                "- без извинений,",
-                "- без вопросов от лица поддержки.",
-                "Просто верни переформулированный текст."
+                "Ты — помощник по нормализации текста клиентских сообщений.",
+                "Твоя задача — переписать текст так, чтобы он был нейтральным и понятным.",
+                "Правила переписывания:",
+                "- Убери ненормативную лексику и жаргон.",
+                "- Не изменяй смысл текста.",
+                "- Не заменяй названия продуктов, объектов или любых слов на похожие банковские термины.",
+                "- Не добавляй информацию, которой нет в исходном тексте.",
+                "- Если текст уже нейтральный — верни его без изменений.",
+                "- Перепиши строго в виде запроса, без обращения к клиенту, без извинений, без вопросов от лица поддержки.",
+                "Пример: \"что с моей картошкой?\" → \"что с моей картошкой?\""
         );
+
 
         Map<String, Object> body = Map.of(
                 "model", props.getChatModel(),
@@ -320,10 +324,13 @@ public class SciboxClient {
             int retryCount
     ) {
         final int MAX_RETRIES = 3;
+        final double MIN_SIMILARITY = 0.5;        // минимальное абсолютное сходство
+        final double SIMILARITY_DIFF_THRESHOLD = 0.03; // минимальная разница между топ-2
 
         Map<String, Double> similarities = computeCategorySimilarities(embeddedQuestion, embeddingsByCategory);
         if (similarities.isEmpty()) return "";
 
+        // Сортируем по убыванию сходства
         List<Map.Entry<String, Double>> sorted = similarities.entrySet().stream()
                 .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                 .toList();
@@ -331,23 +338,39 @@ public class SciboxClient {
         Map.Entry<String, Double> top1 = sorted.get(0);
         Map.Entry<String, Double> top2 = sorted.size() > 1 ? sorted.get(1) : null;
 
-        double diff = (top2 != null) ? Math.abs(top1.getValue() - top2.getValue()) : 1.0;
-        double SIMILARITY_DIFF_THRESHOLD = 0.03;
+        // Проверяем абсолютное сходство
+        if (top1.getValue() < MIN_SIMILARITY) {
+            return ""; // нет уверенного совпадения → пустая категория
+        }
 
-        // если явно выраженный лидер — вернуть
+        // Проверяем разницу между топ-2
+        double diff = (top2 != null) ? Math.abs(top1.getValue() - top2.getValue()) : 1.0;
         if (diff >= SIMILARITY_DIFF_THRESHOLD) {
             return top1.getKey();
         }
 
-        // иначе спросить у LLM
-        String category = resolveWithLLM(enrichedQuestion, top1.getKey(), top2.getKey());
+        // Если близко по сходству — пробуем LLM
+        String category = resolveWithLLM(enrichedQuestion, top1.getKey(), top2 != null ? top2.getKey() : null);
 
-        if (category.isBlank() && retryCount < MAX_RETRIES) {
-            return handleLowConfidence(enrichedQuestion, embeddedQuestion, embeddingsByCategory, threshold, retryCount);
+        if ((category == null || category.isBlank()) && retryCount < MAX_RETRIES) {
+            // переформулируем и пробуем снова
+            String rephrasedQuestion = changeQuestionToSimilarText(enrichedQuestion);
+            List<String> newEntities = retrieveEntities(rephrasedQuestion);
+            String rephrasedEnrichedQuery = enrichQuery(rephrasedQuestion, newEntities);
+            List<Double> newEmbeddedQuestion = getEmbedding(rephrasedEnrichedQuery);
+
+            return resolveCategoryWithEmbeddings(
+                    rephrasedEnrichedQuery,
+                    newEmbeddedQuestion,
+                    embeddingsByCategory,
+                    threshold,
+                    retryCount + 1
+            );
         }
 
-        return category;
+        return category != null ? category : "";
     }
+
 
     /** Считает косинусные сходства категорий */
     private Map<String, Double> computeCategorySimilarities(
@@ -561,18 +584,31 @@ public class SciboxClient {
 
     //debug
     public String testRetrieveCategory(String question) {
-        // Нормализация + обогащение
+        // 1️⃣ Нормализация
         String normalisedQuestion = normaliseText(question);
+        System.out.println("Нормализованный вопрос: " + normalisedQuestion);
+
+        // 2️⃣ Извлечение сущностей
         List<String> entities = retrieveEntities(normalisedQuestion);
+        System.out.println("🔹 Сущности: " + entities);
+
+        // 3️⃣ Обогащение запроса
         String enrichedQuery = enrichQuery(normalisedQuestion, entities);
+        System.out.println("Обогащённый запрос: " + enrichedQuery);
+
+        // 4️⃣ Эмбеддинг
         List<Double> embeddedQuestion = getEmbedding(enrichedQuery);
 
-        // Получаем эмбеддинги по категориям
+        // 5️⃣ Эмбеддинги по категориям
         Map<String, List<List<Double>>> embeddingsByCategory = faqEmbeddingsRepository.getEmbeddingsGroupedByCategory();
 
-        // Вызываем приватный метод внутри класса
-        return resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, embeddingsByCategory, 0.7, 0);
+        // 6️⃣ Определяем категорию
+        String category = resolveCategoryWithEmbeddings(enrichedQuery, embeddedQuestion, embeddingsByCategory, 0.7, 0);
+        System.out.println("Решённая категория: " + category);
+
+        return category;
     }
+
 
     public void testSubcategoryResolution(String category, String question) {
 
