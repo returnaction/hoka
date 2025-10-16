@@ -8,7 +8,10 @@ const slice = createSlice({
   name: 'editor',
   initialState,
   reducers: {
-    setOrigin: (s, a: PayloadAction<Template>) => { s.origin = a.payload }
+    setOrigin: (s, a: PayloadAction<Template>) => { 
+      // Создаем новый объект с timestamp, чтобы React всегда видел изменение
+      s.origin = { ...a.payload, _timestamp: Date.now() }
+    }
   }
 })
 

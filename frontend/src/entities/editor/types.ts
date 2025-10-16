@@ -1,2 +1,4 @@
 import type { Template } from '@/entities/suggestions/types'
-export type EditorState = { origin: Template | null }
+
+export type TemplateWithTimestamp = Template & { _timestamp?: number }
+export type EditorState = { origin: TemplateWithTimestamp | null }
